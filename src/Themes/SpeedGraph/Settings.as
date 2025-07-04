@@ -13,7 +13,7 @@ namespace SpeedGraphSettings
     vec4 SpeedLineColor = vec4(0.2f, 0.8f, 0.2f, 1.0f);
 
     [Setting name="Gear Line Color" category="SpeedGraph"]
-    vec4 GearLineColor = vec4(1.0f, 0.84f, 0.0f, 1.0f); // Gold color
+    vec4 GearLineColor = vec4(0.6f, 0.8f, 1.0f, 1.0f); // Pale blue color
 
     [Setting name="Grid Color" category="SpeedGraph"]
     vec4 GridColor = vec4(0.3f, 0.3f, 0.3f, 0.5f);
@@ -28,7 +28,7 @@ namespace SpeedGraphSettings
     float SpeedLineWidth = 2.0f;
 
     [Setting name="Gear Line Width" category="SpeedGraph" min=1.0 max=5.0]
-    float GearLineWidth = 3.0f;
+    float GearLineWidth = 2.0f; // Reduced from 3.0f to 2.0f
 
     [Setting name="Grid Line Width" category="SpeedGraph" min=0.5 max=2.0]
     float GridLineWidth = 1.0f;
@@ -54,18 +54,30 @@ namespace SpeedGraphSettings
     [Setting name="Font Size" category="SpeedGraph" min=12.0 max=36.0]
     float FontSize = 24.0f;
 
+    [Setting name="Gear Shift Indicator Color" category="SpeedGraph"]
+    vec4 GearShiftIndicatorColor = vec4(1.0f, 0.0f, 0.0f, 1.0f); // Red color for gear shift indicator
+
+    [Setting name="Show RPM Graph" category="SpeedGraph"]
+    bool ShowRPMGraph = true;
+
+    [Setting name="RPM Line Color" category="SpeedGraph"]
+    vec4 RPMLineColor = vec4(1.0f, 0.6f, 0.2f, 1.0f); // Orange color for RPM
+
+    [Setting name="RPM Line Width" category="SpeedGraph" min=1.0 max=5.0]
+    float RPMLineWidth = 2.0f;
+
     void ResetAllToDefault()
     {
         TimeWindow = 10.0f;
         UpdateInterval = 0.05f;
         GraphPadding = 20.0f;
         SpeedLineColor = vec4(0.2f, 0.8f, 0.2f, 1.0f);
-        GearLineColor = vec4(1.0f, 0.84f, 0.0f, 1.0f); // Gold color
+        GearLineColor = vec4(0.6f, 0.8f, 1.0f, 1.0f); // Pale blue color
         GridColor = vec4(0.3f, 0.3f, 0.3f, 0.5f);
         BackgroundColor = vec4(0.1f, 0.1f, 0.1f, 0.8f);
         TextColor = vec4(1.0f, 1.0f, 1.0f, 1.0f);
         SpeedLineWidth = 2.0f;
-        GearLineWidth = 3.0f;
+        GearLineWidth = 2.0f; // Update default value here too
         GridLineWidth = 1.0f;
         MaxSpeed = 300.0f;
         ShowGrid = true;
@@ -74,5 +86,9 @@ namespace SpeedGraphSettings
         ShowGearGraph = true;
         GearGraphHeightPercent = 0.2f;
         FontSize = 24.0f;
+        GearShiftIndicatorColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);
+        ShowRPMGraph = true;
+        RPMLineColor = vec4(1.0f, 0.6f, 0.2f, 1.0f);
+        RPMLineWidth = 2.0f;
     }
 } 

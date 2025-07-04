@@ -2,6 +2,7 @@ class SpeedDataPoint {
     float timestamp;
     float speed;
     int gear;
+    float rpm;  // Add RPM to data points
 }
 
 class SpeedGraphGauge : Gauge {
@@ -12,8 +13,15 @@ class SpeedGraphGauge : Gauge {
     vec2 m_graphSize;
     vec2 m_graphPos;
     
+    // Fonts for display
+    nvg::Font m_valueFont;
+    nvg::Font m_labelFont;
+    
     SpeedGraphGauge() {
         super();
+        // Load fonts - Light Italic for values, Demi Bold for labels
+        m_valueFont = nvg::LoadFont("src/Fonts/Oswald-Light-Italic.ttf");
+        m_labelFont = nvg::LoadFont("src/Fonts/Oswald-Demi-Bold-Italic.ttf");
     }
     
     void InternalRender(CSceneVehicleVisState@ vis) override {
@@ -61,6 +69,7 @@ class SpeedGraphGauge : Gauge {
         point.timestamp = timestamp;
         point.speed = speed;
         point.gear = gear;
+        point.rpm = m_rpm;  // Store RPM with each data point
         m_dataPoints.InsertLast(point);
     }
     
@@ -106,14 +115,19 @@ class SpeedGraphGauge : Gauge {
             RenderGrid(minSpeed, maxSpeed);
         }
         
-        // Render speed graph
-        if (SpeedGraphSettings::ShowSpeedGraph) {
-            RenderSpeedGraph(startTime, endTime, minSpeed, maxSpeed);
-        }
-        
-        // Render gear graph
+        // Render gear graph first (so speed/rpm graphs appear on top)
         if (SpeedGraphSettings::ShowGearGraph) {
             RenderGearGraph(startTime, endTime);
+        }
+
+        // Render RPM graph
+        if (SpeedGraphSettings::ShowRPMGraph) {
+            RenderRPMGraph(startTime, endTime);
+        }
+        
+        // Render speed graph last (on top)
+        if (SpeedGraphSettings::ShowSpeedGraph) {
+            RenderSpeedGraph(startTime, endTime, minSpeed, maxSpeed);
         }
         
         // Render current values
@@ -146,12 +160,23 @@ class SpeedGraphGauge : Gauge {
             nvg::LineTo(vec2(m_graphPos.x + m_graphSize.x, y));
         }
         
-        // Vertical grid lines (time)
-        int numVerticalLines = 5;
-        for (int i = 0; i <= numVerticalLines; i++) {
-            float x = m_graphPos.x + (m_graphSize.x * i) / numVerticalLines;
-            nvg::MoveTo(vec2(x, m_graphPos.y));
-            nvg::LineTo(vec2(x, m_graphPos.y + m_graphSize.y));
+        // Vertical grid lines (time) - now at 1-second intervals
+        float currentTime = Time::Now / 1000.0f;
+        float startTime = currentTime - SpeedGraphSettings::TimeWindow;
+        
+        // Find the first whole second after startTime
+        float firstLineTime = Math::Ceil(startTime);
+        
+        // Draw lines for each whole second in the window
+        for (float t = firstLineTime; t <= currentTime; t += 1.0f) {
+            // Convert time to x coordinate
+            float x = m_graphPos.x + ((t - startTime) / SpeedGraphSettings::TimeWindow) * m_graphSize.x;
+            
+            // Only draw if within graph bounds
+            if (x >= m_graphPos.x && x <= m_graphPos.x + m_graphSize.x) {
+                nvg::MoveTo(vec2(x, m_graphPos.y));
+                nvg::LineTo(vec2(x, m_graphPos.y + m_graphSize.y));
+            }
         }
         
         nvg::Stroke();
@@ -200,7 +225,51 @@ class SpeedGraphGauge : Gauge {
         // Reset clipping
         nvg::ResetScissor();
     }
-    
+
+    void RenderRPMGraph(float startTime, float endTime) {
+        if (m_dataPoints.Length < 2) return;
+        
+        // Set clipping region to prevent drawing outside graph area
+        nvg::Scissor(m_graphPos.x, m_graphPos.y, m_graphSize.x, m_graphSize.y);
+        
+        nvg::BeginPath();
+        nvg::StrokeColor(SpeedGraphSettings::RPMLineColor);
+        nvg::StrokeWidth(SpeedGraphSettings::RPMLineWidth);
+        
+        bool firstPoint = true;
+        float maxRPM = 11000.0f; // Same as in Gauge class
+        
+        for (uint i = 0; i < m_dataPoints.Length; i++) {
+            // Only process points within the time window
+            if (m_dataPoints[i].timestamp < startTime || m_dataPoints[i].timestamp > endTime) {
+                continue;
+            }
+            
+            // Calculate X coordinate
+            float x = m_graphPos.x + ((m_dataPoints[i].timestamp - startTime) / (endTime - startTime)) * m_graphSize.x;
+            
+            // Clamp X coordinate to graph bounds
+            x = Math::Clamp(x, m_graphPos.x, m_graphPos.x + m_graphSize.x);
+            
+            // Calculate Y coordinate (RPM scaled to graph height)
+            float y = m_graphPos.y + m_graphSize.y * (1.0f - (m_dataPoints[i].rpm / maxRPM));
+            y = Math::Clamp(y, m_graphPos.y, m_graphPos.y + m_graphSize.y);
+            
+            if (firstPoint) {
+                nvg::MoveTo(vec2(x, y));
+                firstPoint = false;
+            } else {
+                nvg::LineTo(vec2(x, y));
+            }
+        }
+        
+        nvg::Stroke();
+        nvg::ClosePath();
+        
+        // Reset clipping
+        nvg::ResetScissor();
+    }
+
     void RenderGearGraph(float startTime, float endTime) {
         if (m_dataPoints.Length < 2) return;
         
@@ -242,8 +311,6 @@ class SpeedGraphGauge : Gauge {
             int gridLineIndex = numHorizontalLines - (displayGear - 1); // Maps gear 1-5 to grid lines 5-1
             float y = m_graphPos.y + (m_graphSize.y * gridLineIndex) / numHorizontalLines;
             
-            // No need to clamp Y as it will exactly match grid lines
-            
             if (firstPoint) {
                 // Start the path at the first point
                 nvg::MoveTo(vec2(x, y));
@@ -271,15 +338,79 @@ class SpeedGraphGauge : Gauge {
         
         // Display current speed and gear in the corner
         nvg::BeginPath();
-        nvg::FillColor(SpeedGraphSettings::TextColor);
-        nvg::FontSize(SpeedGraphSettings::FontSize);
         nvg::TextAlign(nvg::Align::Left);
         
-        string speedText = Text::Format("Speed: %.0f km/h", m_speed);
-        string gearText = "Gear: " + (m_gear == -1 ? "R" : tostring(m_gear));
+        float labelFontSize = SpeedGraphSettings::FontSize * 0.8f;  // Slightly smaller for labels
+        float valueFontSize = SpeedGraphSettings::FontSize * 1.2f;  // Larger for values
+        float xPos = m_graphPos.x + 10;
+        float yPosSpeed = m_graphPos.y + 30;
+        float yPosGear = m_graphPos.y + 60;
+        float yPosRPM = m_graphPos.y + 90;  // Add RPM display below gear
         
-        nvg::Text(m_graphPos.x + 10, m_graphPos.y + 30, speedText);
-        nvg::Text(m_graphPos.x + 10, m_graphPos.y + 60, gearText);
+        // Draw labels with bold font
+        nvg::FontFace(m_labelFont);
+        nvg::FontSize(labelFontSize);
+        nvg::FillColor(SpeedGraphSettings::TextColor);
+
+        // Draw Speed label and underline
+        nvg::Text(xPos, yPosSpeed, "SPEED");
+        vec2 speedBounds = nvg::TextBounds("SPEED");
+        nvg::BeginPath();
+        nvg::StrokeWidth(2.0f);
+        nvg::StrokeColor(SpeedGraphSettings::SpeedLineColor);
+        nvg::MoveTo(vec2(xPos, yPosSpeed + 2));
+        nvg::LineTo(vec2(xPos + speedBounds.x, yPosSpeed + 2));
+        nvg::Stroke();
+        nvg::ClosePath();
+
+        // Draw Gear label and underline
+        nvg::Text(xPos, yPosGear, "GEAR");
+        vec2 gearBounds = nvg::TextBounds("GEAR");
+        nvg::BeginPath();
+        nvg::StrokeWidth(2.0f);
+        nvg::StrokeColor(SpeedGraphSettings::GearLineColor);
+        nvg::MoveTo(vec2(xPos, yPosGear + 2));
+        nvg::LineTo(vec2(xPos + gearBounds.x, yPosGear + 2));
+        nvg::Stroke();
+        nvg::ClosePath();
+
+        // Draw RPM label and underline if enabled
+        if (SpeedGraphSettings::ShowRPMGraph) {
+            nvg::Text(xPos, yPosRPM, "RPM");
+            vec2 rpmBounds = nvg::TextBounds("RPM");
+            nvg::BeginPath();
+            nvg::StrokeWidth(2.0f);
+            nvg::StrokeColor(SpeedGraphSettings::RPMLineColor);
+            nvg::MoveTo(vec2(xPos, yPosRPM + 2));
+            nvg::LineTo(vec2(xPos + rpmBounds.x, yPosRPM + 2));
+            nvg::Stroke();
+            nvg::ClosePath();
+        }
+        
+        // Calculate width of labels to offset values
+        vec2 speedLabelBounds = nvg::TextBounds("SPEED");
+        vec2 gearLabelBounds = nvg::TextBounds("GEAR");
+        vec2 rpmLabelBounds = nvg::TextBounds("RPM");
+        float labelPadding = 10;  // Add some space between label and value
+        
+        // Draw values with light font
+        nvg::FontFace(m_valueFont);
+        nvg::FontSize(valueFontSize);
+        
+        // Draw speed value
+        nvg::FillColor(SpeedGraphSettings::TextColor);
+        nvg::Text(xPos + speedLabelBounds.x + labelPadding, yPosSpeed, Text::Format("%.0f", m_speed));
+        
+        // Draw gear value with color based on RPM
+        string gearText = m_gear == -1 ? "R" : Text::Format("%d", m_gear);
+        nvg::FillColor(m_rpm >= 10000 ? SpeedGraphSettings::GearShiftIndicatorColor : SpeedGraphSettings::TextColor);
+        nvg::Text(xPos + gearLabelBounds.x + labelPadding, yPosGear, gearText);
+        
+        // Draw RPM value if RPM graph is enabled
+        if (SpeedGraphSettings::ShowRPMGraph) {
+            nvg::FillColor(SpeedGraphSettings::TextColor);
+            nvg::Text(xPos + rpmLabelBounds.x + labelPadding, yPosRPM, Text::Format("%.0f", m_rpm));
+        }
         
         nvg::ClosePath();
         
@@ -321,6 +452,7 @@ class SpeedGraphGauge : Gauge {
             SpeedGraphSettings::ShowCurrentValues = UI::Checkbox("Show Current Values", SpeedGraphSettings::ShowCurrentValues);
             SpeedGraphSettings::ShowSpeedGraph = UI::Checkbox("Show Speed Graph", SpeedGraphSettings::ShowSpeedGraph);
             SpeedGraphSettings::ShowGearGraph = UI::Checkbox("Show Gear Graph", SpeedGraphSettings::ShowGearGraph);
+            SpeedGraphSettings::ShowRPMGraph = UI::Checkbox("Show RPM Graph", SpeedGraphSettings::ShowRPMGraph);
             
             UI::EndChild();
             UI::EndTabItem();
@@ -334,6 +466,7 @@ class SpeedGraphGauge : Gauge {
             SpeedGraphSettings::GridColor = UI::InputColor4("Grid Color", SpeedGraphSettings::GridColor);
             SpeedGraphSettings::BackgroundColor = UI::InputColor4("Background Color", SpeedGraphSettings::BackgroundColor);
             SpeedGraphSettings::TextColor = UI::InputColor4("Text Color", SpeedGraphSettings::TextColor);
+            SpeedGraphSettings::RPMLineColor = UI::InputColor4("RPM Line Color", SpeedGraphSettings::RPMLineColor);
             
             UI::EndChild();
             UI::EndTabItem();
@@ -346,6 +479,7 @@ class SpeedGraphGauge : Gauge {
             SpeedGraphSettings::GearLineWidth = UI::SliderFloat("Gear Line Width", SpeedGraphSettings::GearLineWidth, 1.0f, 5.0f);
             SpeedGraphSettings::GridLineWidth = UI::SliderFloat("Grid Line Width", SpeedGraphSettings::GridLineWidth, 0.5f, 2.0f);
             SpeedGraphSettings::GearGraphHeightPercent = UI::SliderFloat("Gear Graph Height (%)", SpeedGraphSettings::GearGraphHeightPercent, 0.1f, 0.5f);
+            SpeedGraphSettings::RPMLineWidth = UI::SliderFloat("RPM Line Width", SpeedGraphSettings::RPMLineWidth, 1.0f, 5.0f);
             
             UI::EndChild();
             UI::EndTabItem();
