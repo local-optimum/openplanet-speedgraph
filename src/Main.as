@@ -24,7 +24,7 @@ void RenderInterface()
 
 void RenderMenu()
 {
-    if(UI::MenuItem("\\$fa0" + Icons::Kenney::ButtonCircle + " \\$zSpeed-graph", "", PluginSettings::ShowSpeedometer))
+    if(UI::MenuItem("\\$fa0" + Icons::BarChart + " \\$zSpeed-graph", "", PluginSettings::ShowSpeedometer))
         PluginSettings::ShowSpeedometer = !PluginSettings::ShowSpeedometer;
 }
 

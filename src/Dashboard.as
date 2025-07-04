@@ -23,6 +23,9 @@ class Dashboard
             case PluginSettings::Themes::Ascension2023:
                 @m_gauge = Ascension2023Gauge();
                 break;
+            case PluginSettings::Themes::SpeedGraph:
+                @m_gauge = SpeedGraphGauge();
+                break;
             default:
                 @m_gauge = Gauge();
                 break;
