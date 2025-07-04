@@ -1,2 +1,4 @@
 build-op.bat
 *.op
+prompt contexts/
+.env

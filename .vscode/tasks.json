@@ -4,16 +4,42 @@
     "version": "2.0.0",
     "tasks": [
         {
+            "label": "Build & Deploy to Windows (WSL)",
+            "type": "shell",
+            "command": "./deploy.sh",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Deploy Development Version (WSL)",
+            "type": "shell",
+            "command": "./build-dev.sh",
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
             "label": "Build .op file",
             "type": "shell",
             "command": "${workspaceFolder}/build-op.bat",
             "problemMatcher": [
                 "$Openplanet Remote Build Problem Matcher: Angelscript Compiler"
             ],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            }
+            "group": "build"
         },
         {
             "type": "Openplanet Remote Build",

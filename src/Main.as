@@ -16,7 +16,7 @@ void Render()
 void RenderInterface()
 {
     if (PluginSettings::LocatorMode) {
-        Locator::Render("Speedometer", PluginSettings::Position, PluginSettings::Size);
+        Locator::Render("Speed-graph", PluginSettings::Position, PluginSettings::Size);
         PluginSettings::Position = Locator::GetPos();
         PluginSettings::Size = Locator::GetSize();
     }
@@ -24,7 +24,7 @@ void RenderInterface()
 
 void RenderMenu()
 {
-    if(UI::MenuItem("\\$fa0" + Icons::Kenney::ButtonCircle + " \\$zSpeedometer", "", PluginSettings::ShowSpeedometer))
+    if(UI::MenuItem("\\$fa0" + Icons::Kenney::ButtonCircle + " \\$zSpeed-graph", "", PluginSettings::ShowSpeedometer))
         PluginSettings::ShowSpeedometer = !PluginSettings::ShowSpeedometer;
 }
 
