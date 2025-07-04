@@ -1,0 +1,19 @@
+PLACEHOLDER FOR SPEEDGRAPH SCREENSHOT
+
+This file should be replaced with a screenshot of the SpeedGraph theme showing:
+- Real-time speed line graph (green)
+- Gear shift stepped graph (red)
+- Grid lines
+- Current speed and gear values
+- Clean, professional telemetry display
+
+Recommended dimensions: Similar to other theme screenshots (~1920x1080 or similar)
+Format: JPG
+Filename: SpeedGraph.jpg (replace this placeholder)
+
+To capture:
+1. Load Trackmania with Speed Graph plugin
+2. Select SpeedGraph theme
+3. Drive for a few seconds to generate graph data
+4. Take screenshot showing the graph in action
+5. Replace this placeholder file with SpeedGraph.jpg 

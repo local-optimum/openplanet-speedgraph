@@ -48,8 +48,8 @@ namespace SpeedGraphSettings
     [Setting name="Show Gear Graph" category="SpeedGraph"]
     bool ShowGearGraph = true;
 
-    [Setting name="Gear Graph Height (% of total)" category="SpeedGraph" min=0.1 max=0.5]
-    float GearGraphHeightPercent = 0.2f;
+    [Setting name="Gear Graph Height (% of total)" category="SpeedGraph" min=0.1 max=1.0]
+    float GearGraphHeightPercent = 0.4f;
 
     [Setting name="Font Size" category="SpeedGraph" min=12.0 max=36.0]
     float FontSize = 24.0f;
@@ -65,6 +65,9 @@ namespace SpeedGraphSettings
 
     [Setting name="RPM Line Width" category="SpeedGraph" min=1.0 max=5.0]
     float RPMLineWidth = 2.0f;
+
+    [Setting name="RPM Graph Height (% of total)" category="SpeedGraph" min=0.1 max=1.0]
+    float RPMGraphHeightPercent = 0.4f;
 
     void ResetAllToDefault()
     {
@@ -84,11 +87,12 @@ namespace SpeedGraphSettings
         ShowCurrentValues = true;
         ShowSpeedGraph = true;
         ShowGearGraph = true;
-        GearGraphHeightPercent = 0.2f;
+        GearGraphHeightPercent = 0.4f;
         FontSize = 24.0f;
         GearShiftIndicatorColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);
         ShowRPMGraph = true;
         RPMLineColor = vec4(1.0f, 0.6f, 0.2f, 1.0f);
         RPMLineWidth = 2.0f;
+        RPMGraphHeightPercent = 0.4f;
     }
 } 

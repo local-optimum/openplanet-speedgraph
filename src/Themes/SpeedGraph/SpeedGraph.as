@@ -251,8 +251,8 @@ class SpeedGraphGauge : Gauge {
             // Clamp X coordinate to graph bounds
             x = Math::Clamp(x, m_graphPos.x, m_graphPos.x + m_graphSize.x);
             
-            // Calculate Y coordinate (RPM scaled to graph height)
-            float y = m_graphPos.y + m_graphSize.y * (1.0f - (m_dataPoints[i].rpm / maxRPM));
+            // Calculate Y coordinate (RPM scaled to configured percentage of graph height from bottom)
+            float y = m_graphPos.y + m_graphSize.y * (1.0f - (m_dataPoints[i].rpm / maxRPM) * SpeedGraphSettings::RPMGraphHeightPercent);
             y = Math::Clamp(y, m_graphPos.y, m_graphPos.y + m_graphSize.y);
             
             if (firstPoint) {
@@ -280,10 +280,7 @@ class SpeedGraphGauge : Gauge {
         nvg::StrokeColor(SpeedGraphSettings::GearLineColor);
         nvg::StrokeWidth(SpeedGraphSettings::GearLineWidth);
         
-        // Use full graph height for gear display, with 5 gear levels (1-5)
-        // Each gear maps exactly to a grid line position
-        int numHorizontalLines = 5; // Same as in RenderGrid
-        
+        // Use configurable percentage of graph height for gear display, with 5 gear levels (1-5)
         bool firstPoint = true;
         float lastX = 0, lastY = 0;
         
@@ -299,17 +296,16 @@ class SpeedGraphGauge : Gauge {
             // Clamp X coordinate to graph bounds
             x = Math::Clamp(x, m_graphPos.x, m_graphPos.x + m_graphSize.x);
             
-            // Map gear to Y coordinate (gear 5 at top grid line, gear 1 at bottom grid line)
+            // Map gear to Y coordinate using configurable percentage
             // Treat reverse gear (-1) and neutral (0) as bottom level
             int displayGear = m_dataPoints[i].gear;
             if (displayGear <= 0) displayGear = 1; // Reverse/Neutral map to gear 1 level
             if (displayGear > 5) displayGear = 5; // Cap at gear 5
             
-            // Calculate Y coordinate to match grid lines exactly
-            // Grid lines are drawn at m_graphPos.y + (m_graphSize.y * i) / numHorizontalLines
-            // We want gear 5 at i=0 (top) and gear 1 at i=numHorizontalLines (bottom)
-            int gridLineIndex = numHorizontalLines - (displayGear - 1); // Maps gear 1-5 to grid lines 5-1
-            float y = m_graphPos.y + (m_graphSize.y * gridLineIndex) / numHorizontalLines;
+            // Calculate Y coordinate using configurable percentage of graph height
+            // Gear 1 at bottom, gear 5 at top of the configured percentage area
+            float gearRatio = (displayGear - 1) / 4.0f; // Maps gear 1-5 to 0.0-1.0
+            float y = m_graphPos.y + m_graphSize.y * (1.0f - gearRatio * SpeedGraphSettings::GearGraphHeightPercent);
             
             if (firstPoint) {
                 // Start the path at the first point
@@ -345,7 +341,7 @@ class SpeedGraphGauge : Gauge {
         float xPos = m_graphPos.x + 10;
         float yPosSpeed = m_graphPos.y + 30;
         float yPosGear = m_graphPos.y + 60;
-        float yPosRPM = m_graphPos.y + 90;  // Add RPM display below gear
+        float yPosRPM = m_graphPos.y + 90;  // Consistent 30px spacing between all elements
         
         // Draw labels with bold font
         nvg::FontFace(m_labelFont);
@@ -404,18 +400,58 @@ class SpeedGraphGauge : Gauge {
         // Draw gear value with color based on RPM
         string gearText = m_gear == -1 ? "R" : Text::Format("%d", m_gear);
         nvg::FillColor(m_rpm >= 10000 ? SpeedGraphSettings::GearShiftIndicatorColor : SpeedGraphSettings::TextColor);
-        nvg::Text(xPos + gearLabelBounds.x + labelPadding, yPosGear, gearText);
+        nvg::Text(xPos + gearLabelBounds.x + labelPadding, yPosGear + 3, gearText); // Move gear number down by 3px
         
-        // Draw RPM value if RPM graph is enabled
+        // Draw RPM bar if RPM graph is enabled
         if (SpeedGraphSettings::ShowRPMGraph) {
-            nvg::FillColor(SpeedGraphSettings::TextColor);
-            nvg::Text(xPos + rpmLabelBounds.x + labelPadding, yPosRPM, Text::Format("%.0f", m_rpm));
+            RenderRPMBar(xPos + rpmLabelBounds.x + labelPadding, yPosRPM);
         }
         
         nvg::ClosePath();
         
         // Reset clipping
         nvg::ResetScissor();
+    }
+    
+    void RenderRPMBar(float x, float y) {
+        float barWidth = 48.0f; // 60% of original 80px
+        float barHeight = 12.0f;
+        float barY = y - barHeight * 0.8f; // Move up relative to RPM text label
+        
+        // Calculate RPM percentage
+        float rpmPercentage = Math::Clamp(m_rpm / m_maxRpm, 0.0f, 1.0f);
+        float fillWidth = barWidth * rpmPercentage;
+        
+        // Determine if we should flash red (gear shift indicator)
+        bool shouldFlashRed = m_rpm >= 10000; // Same logic as gear text
+        
+        // Background (empty part of bar)
+        nvg::BeginPath();
+        nvg::Rect(vec2(x, barY), vec2(barWidth, barHeight));
+        nvg::FillColor(vec4(0.1f, 0.1f, 0.1f, 0.8f)); // Dark background
+        nvg::Fill();
+        nvg::ClosePath();
+        
+        // Fill (RPM level)
+        if (fillWidth > 0) {
+            nvg::BeginPath();
+            nvg::Rect(vec2(x, barY), vec2(fillWidth, barHeight));
+            if (shouldFlashRed) {
+                nvg::FillColor(SpeedGraphSettings::GearShiftIndicatorColor); // Red flash
+            } else {
+                nvg::FillColor(vec4(1.0f, 1.0f, 1.0f, 1.0f)); // White fill
+            }
+            nvg::Fill();
+            nvg::ClosePath();
+        }
+        
+        // White border
+        nvg::BeginPath();
+        nvg::Rect(vec2(x, barY), vec2(barWidth, barHeight));
+        nvg::StrokeColor(vec4(1.0f, 1.0f, 1.0f, 1.0f)); // White border
+        nvg::StrokeWidth(1.0f);
+        nvg::Stroke();
+        nvg::ClosePath();
     }
     
     void RenderSpeed() override {
