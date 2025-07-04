@@ -17,6 +17,9 @@ class SpeedGraphGauge : Gauge {
     nvg::Font m_valueFont;
     nvg::Font m_labelFont;
     
+    // Smooth scaling animation
+    float m_smoothMaxSpeed = 250.0f;
+    
     SpeedGraphGauge() {
         super();
         // Load fonts - Light Italic for values, Demi Bold for labels
@@ -94,18 +97,33 @@ class SpeedGraphGauge : Gauge {
         float startTime = currentTime - SpeedGraphSettings::TimeWindow;
         float endTime = currentTime;
         
-        // Find speed range for scaling
+        // Find speed range for scaling - only consider data points in current time window
         float minSpeed = 0.0f;
-        float maxSpeed = SpeedGraphSettings::MaxSpeed;
+        float dataMaxSpeed = 0.0f;
         
         for (uint i = 0; i < m_dataPoints.Length; i++) {
-            if (m_dataPoints[i].speed > maxSpeed) {
-                maxSpeed = m_dataPoints[i].speed;
+            // Only consider data points within the current time window
+            if (m_dataPoints[i].timestamp >= startTime && m_dataPoints[i].timestamp <= endTime) {
+                if (m_dataPoints[i].speed > dataMaxSpeed) {
+                    dataMaxSpeed = m_dataPoints[i].speed;
+                }
             }
         }
         
-        // Add some padding to max speed
-        maxSpeed += 20.0f;
+        // Scale up when speed gets within 50 of current scale maximum
+        // This provides visual headroom instead of waiting for speed to exceed the scale
+        float scaleBuffer = 50.0f;
+        float requiredMax = dataMaxSpeed + scaleBuffer;
+        
+        // Round up to nearest 50 increment so grid lines align with meaningful values
+        // Ensure minimum of 250 for default range (0, 50, 100, 150, 200, 250)
+        float targetMaxSpeed = Math::Max(250.0f, Math::Ceil(requiredMax / 50.0f) * 50.0f);
+        
+        // Smooth animation: gradually transition to new scale instead of jumping
+        // Use faster lerp speed for zooming in (decreasing scale) than zooming out
+        float lerpSpeed = (targetMaxSpeed < m_smoothMaxSpeed) ? 0.05f : 0.02f;
+        m_smoothMaxSpeed = Math::Lerp(m_smoothMaxSpeed, targetMaxSpeed, lerpSpeed);
+        float maxSpeed = m_smoothMaxSpeed;
         
         // Render background
         RenderBackground();
@@ -152,10 +170,15 @@ class SpeedGraphGauge : Gauge {
         nvg::StrokeColor(SpeedGraphSettings::GridColor);
         nvg::StrokeWidth(SpeedGraphSettings::GridLineWidth);
         
-        // Horizontal grid lines (speed)
-        int numHorizontalLines = 5;
+        // Horizontal grid lines (speed) - always 50 km/h increments
+        float speedIncrement = 50.0f;
+        int numHorizontalLines = int(Math::Ceil(maxSpeed / speedIncrement));
+        
         for (int i = 0; i <= numHorizontalLines; i++) {
-            float y = m_graphPos.y + (m_graphSize.y * i) / numHorizontalLines;
+            float speedValue = i * speedIncrement;
+            
+            // Calculate Y position based on speed value
+            float y = m_graphPos.y + m_graphSize.y * (1.0f - (speedValue - minSpeed) / (maxSpeed - minSpeed));
             nvg::MoveTo(vec2(m_graphPos.x, y));
             nvg::LineTo(vec2(m_graphPos.x + m_graphSize.x, y));
         }
@@ -182,8 +205,62 @@ class SpeedGraphGauge : Gauge {
         nvg::Stroke();
         nvg::ClosePath();
         
-        // Reset clipping
+        // Reset clipping before drawing labels to prevent them from being cut off
         nvg::ResetScissor();
+        
+        // Add speed labels on the right side of horizontal grid lines
+        nvg::FontFace(m_labelFont);
+        nvg::FontSize(SpeedGraphSettings::FontSize * 0.5f); // Thinner font for labels
+        nvg::TextAlign(nvg::Align::Right);
+        
+        // Draw speed labels with intelligent spacing
+        for (int i = 0; i <= numHorizontalLines; i++) {
+            float speedValue = i * speedIncrement;
+            
+            // Also process the exact maxSpeed if it's not already included
+            bool isExactMax = false;
+            if (i == numHorizontalLines && speedValue < maxSpeed) {
+                speedValue = maxSpeed;
+                isExactMax = true;
+            }
+            
+            // Calculate Y position (same as gridline)
+            float y = m_graphPos.y + m_graphSize.y * (1.0f - (speedValue - minSpeed) / (maxSpeed - minSpeed));
+            
+            // Draw labels even if gridline is at the exact top edge
+            // This ensures top gridline labels appear correctly
+            
+            // Determine label visibility and alpha
+            bool shouldShowLabel = false;
+            float alpha = 0.1f;
+            
+            if (maxSpeed <= 250.0f) {
+                // Default view: show all 50 km/h labels
+                shouldShowLabel = (int(speedValue) % 50 == 0);
+            } else {
+                // Zoomed out view: show 100 km/h labels always, fade out 50 km/h sub-labels
+                if (int(speedValue) % 100 == 0) {
+                    // Major labels (100 km/h increments) - always show
+                    shouldShowLabel = true;
+                } else if (int(speedValue) % 50 == 0) {
+                    // Sub-labels (50 km/h increments) - fade out as we zoom out
+                    shouldShowLabel = true;
+                    float fadeRange = 50.0f; // Fade over 50 km/h range above 250
+                    float fadeProgress = Math::Clamp((maxSpeed - 250.0f) / fadeRange, 0.0f, 1.0f);
+                    alpha = 0.1f * (1.0f - fadeProgress);
+                }
+            }
+            
+            if (shouldShowLabel && alpha > 0.01f) { // Lower threshold to ensure labels show
+                // Only show label if it will be positioned within the graph area
+                float labelY = y + 12;
+                if (labelY >= m_graphPos.y && labelY <= m_graphPos.y + m_graphSize.y) {
+                    vec4 labelColor = vec4(SpeedGraphSettings::TextColor.x, SpeedGraphSettings::TextColor.y, SpeedGraphSettings::TextColor.z, alpha);
+                    nvg::FillColor(labelColor);
+                    nvg::Text(m_graphPos.x + m_graphSize.x - 5, labelY, Text::Format("%.0f", speedValue));
+                }
+            }
+        }
     }
     
     void RenderSpeedGraph(float startTime, float endTime, float minSpeed, float maxSpeed) {
