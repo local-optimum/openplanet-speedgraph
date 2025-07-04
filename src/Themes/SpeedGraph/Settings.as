@@ -13,7 +13,7 @@ namespace SpeedGraphSettings
     vec4 SpeedLineColor = vec4(0.2f, 0.8f, 0.2f, 1.0f);
 
     [Setting name="Gear Line Color" category="SpeedGraph"]
-    vec4 GearLineColor = vec4(0.8f, 0.2f, 0.2f, 1.0f);
+    vec4 GearLineColor = vec4(1.0f, 0.84f, 0.0f, 1.0f); // Gold color
 
     [Setting name="Grid Color" category="SpeedGraph"]
     vec4 GridColor = vec4(0.3f, 0.3f, 0.3f, 0.5f);
@@ -60,7 +60,7 @@ namespace SpeedGraphSettings
         UpdateInterval = 0.05f;
         GraphPadding = 20.0f;
         SpeedLineColor = vec4(0.2f, 0.8f, 0.2f, 1.0f);
-        GearLineColor = vec4(0.8f, 0.2f, 0.2f, 1.0f);
+        GearLineColor = vec4(1.0f, 0.84f, 0.0f, 1.0f); // Gold color
         GridColor = vec4(0.3f, 0.3f, 0.3f, 0.5f);
         BackgroundColor = vec4(0.1f, 0.1f, 0.1f, 0.8f);
         TextColor = vec4(1.0f, 1.0f, 1.0f, 1.0f);

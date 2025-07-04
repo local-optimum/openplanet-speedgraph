@@ -211,37 +211,51 @@ class SpeedGraphGauge : Gauge {
         nvg::StrokeColor(SpeedGraphSettings::GearLineColor);
         nvg::StrokeWidth(SpeedGraphSettings::GearLineWidth);
         
-        // Gear graph uses a separate Y-axis scale (bottom portion of graph)
-        float gearGraphHeight = m_graphSize.y * SpeedGraphSettings::GearGraphHeightPercent;
-        float gearGraphY = m_graphPos.y + m_graphSize.y - gearGraphHeight;
+        // Use full graph height for gear display, with 5 gear levels (1-5)
+        // Each gear maps exactly to a grid line position
+        int numHorizontalLines = 5; // Same as in RenderGrid
         
-        int maxGear = 6; // Assume max 6 gears
-        int minGear = -1; // Reverse gear
+        bool firstPoint = true;
+        float lastX = 0, lastY = 0;
         
-        for (uint i = 0; i < m_dataPoints.Length - 1; i++) {
+        for (uint i = 0; i < m_dataPoints.Length; i++) {
             // Only process points within the time window
             if (m_dataPoints[i].timestamp < startTime || m_dataPoints[i].timestamp > endTime) {
                 continue;
             }
             
-            // Calculate coordinates
-            float x1 = m_graphPos.x + ((m_dataPoints[i].timestamp - startTime) / (endTime - startTime)) * m_graphSize.x;
-            float x2 = m_graphPos.x + ((m_dataPoints[i+1].timestamp - startTime) / (endTime - startTime)) * m_graphSize.x;
+            // Calculate X coordinate
+            float x = m_graphPos.x + ((m_dataPoints[i].timestamp - startTime) / (endTime - startTime)) * m_graphSize.x;
             
-            // Clamp X coordinates to graph bounds
-            x1 = Math::Clamp(x1, m_graphPos.x, m_graphPos.x + m_graphSize.x);
-            x2 = Math::Clamp(x2, m_graphPos.x, m_graphPos.x + m_graphSize.x);
+            // Clamp X coordinate to graph bounds
+            x = Math::Clamp(x, m_graphPos.x, m_graphPos.x + m_graphSize.x);
             
-            // Normalize gear to 0-1 range and clamp
-            float normalizedGear = Math::Clamp((m_dataPoints[i].gear - minGear) / float(maxGear - minGear), 0.0f, 1.0f);
-            float y = gearGraphY + (1.0f - normalizedGear) * gearGraphHeight;
+            // Map gear to Y coordinate (gear 5 at top grid line, gear 1 at bottom grid line)
+            // Treat reverse gear (-1) and neutral (0) as bottom level
+            int displayGear = m_dataPoints[i].gear;
+            if (displayGear <= 0) displayGear = 1; // Reverse/Neutral map to gear 1 level
+            if (displayGear > 5) displayGear = 5; // Cap at gear 5
             
-            // Clamp Y coordinate to graph bounds  
-            y = Math::Clamp(y, m_graphPos.y, m_graphPos.y + m_graphSize.y);
+            // Calculate Y coordinate to match grid lines exactly
+            // Grid lines are drawn at m_graphPos.y + (m_graphSize.y * i) / numHorizontalLines
+            // We want gear 5 at i=0 (top) and gear 1 at i=numHorizontalLines (bottom)
+            int gridLineIndex = numHorizontalLines - (displayGear - 1); // Maps gear 1-5 to grid lines 5-1
+            float y = m_graphPos.y + (m_graphSize.y * gridLineIndex) / numHorizontalLines;
             
-            // Draw horizontal line for current gear
-            nvg::MoveTo(vec2(x1, y));
-            nvg::LineTo(vec2(x2, y));
+            // No need to clamp Y as it will exactly match grid lines
+            
+            if (firstPoint) {
+                // Start the path at the first point
+                nvg::MoveTo(vec2(x, y));
+                firstPoint = false;
+            } else {
+                // Create stepped line: horizontal line to current x, then vertical line to new y
+                nvg::LineTo(vec2(x, lastY)); // Horizontal line
+                nvg::LineTo(vec2(x, y));     // Vertical line (gear shift)
+            }
+            
+            lastX = x;
+            lastY = y;
         }
         
         nvg::Stroke();
