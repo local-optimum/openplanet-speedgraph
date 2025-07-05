@@ -2,7 +2,7 @@
 
 # Telemetry for Openplanet
 
-![Image](images/Telemetry.jpg)
+![Image](images/telemetry.png)
 
 [![Version](https://img.shields.io/badge/dynamic/json?color=pink&label=Latest%20Public%20Version&query=version&url=https%3A%2F%2Fopenplanet.dev%2Fapi%2Fplugin%2F207)](https://openplanet.dev/plugin/speedometer)
 [![Total Downloads](https://img.shields.io/badge/dynamic/json?color=grey&label=Downloads&query=downloads&url=https%3A%2F%2Fopenplanet.dev%2Fapi%2Fplugin%2F207)](https://openplanet.dev/plugin/speedometer)
@@ -16,7 +16,7 @@
 
 **The ultimate real-time telemetry overlay for Trackmania!**
 
-Transform your racing analysis with comprehensive telemetry data visualization. This plugin provides professional-grade telemetry graphs that track your vehicle's performance metrics over time, perfect for competitive drivers, content creators, and anyone serious about improving their racing lines.
+Transform your racing analysis with comprehensive telemetry data visualization. This plugin provides vehicle telemetry graphs that track your vehicle's performance metrics over time, perfect for competitive drivers, content creators, and anyone serious about improving their racing lines.
 
 ## 🚀 **Key Features**
 
@@ -94,6 +94,20 @@ Transform your racing analysis with comprehensive telemetry data visualization. 
 - **Memory Efficient**: Automatic cleanup prevents memory bloat
 - **Smooth Rendering**: 60fps+ rendering with efficient drawing operations
 - **Cross-Platform**: Works on all Trackmania platforms supported by Openplanet
+
+## 🙏 **Recognition & Credits**
+
+This telemetry plugin is based on the excellent work from the **[openplanet-speedometer](https://github.com/GreepTheSheep/openplanet-speedometer)** project by **GreepTheSheep** and contributors. 
+
+**Original Project**: [GreepTheSheep/openplanet-speedometer](https://github.com/GreepTheSheep/openplanet-speedometer)  
+**Original Authors**: 
+- **GreepTheSheep** (Matthieu - Greep)
+- **zeratax** (Jona Abdinghoff) 
+- **nbeerten**
+
+The original speedometer dashboard provided the foundation for this specialized telemetry analysis tool. We've transformed and focused it specifically on comprehensive speed graph analysis while maintaining the high-quality codebase and design principles from the original work.
+
+**License**: MIT License (maintained from original project)
 
 ---
 
