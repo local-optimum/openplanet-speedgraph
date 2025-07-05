@@ -4,13 +4,7 @@
 
 ![Image](images/telemetry.png)
 
-[![Version](https://img.shields.io/badge/dynamic/json?color=pink&label=Latest%20Public%20Version&query=version&url=https%3A%2F%2Fopenplanet.dev%2Fapi%2Fplugin%2F207)](https://openplanet.dev/plugin/speedometer)
-[![Total Downloads](https://img.shields.io/badge/dynamic/json?color=grey&label=Downloads&query=downloads&url=https%3A%2F%2Fopenplanet.dev%2Fapi%2Fplugin%2F207)](https://openplanet.dev/plugin/speedometer)
-![Signed](https://img.shields.io/badge/dynamic/json?color=brightgreen&label=Signed&query=signed&url=https%3A%2F%2Fopenplanet.dev%2Fapi%2Fplugin%2F207)
 
-![Tags 1](https://img.shields.io/badge/dynamic/json?color=darkgreen&label=Game&query=tags%5B0%5D.name&url=https%3A%2F%2Fopenplanet.dev%2Fapi%2Fplugin%2F207)
-![Tags 2](https://img.shields.io/badge/dynamic/json?color=blue&label=Game&query=tags%5B1%5D.name&url=https%3A%2F%2Fopenplanet.dev%2Fapi%2Fplugin%2F207)
-![Tags 3](https://img.shields.io/badge/dynamic/json?color=yellowgreen&label=Game&query=tags%5B2%5D.name&url=https%3A%2F%2Fopenplanet.dev%2Fapi%2Fplugin%2F207)
 
 </div>
 
