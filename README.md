@@ -1,8 +1,8 @@
 <div align="center">
 
-# Speedometer Dashboard for Openplanet
+# Telemetry for Openplanet
 
-![Image](images/Basic.jpg)
+![Image](images/Telemetry.jpg)
 
 [![Version](https://img.shields.io/badge/dynamic/json?color=pink&label=Latest%20Public%20Version&query=version&url=https%3A%2F%2Fopenplanet.dev%2Fapi%2Fplugin%2F207)](https://openplanet.dev/plugin/speedometer)
 [![Total Downloads](https://img.shields.io/badge/dynamic/json?color=grey&label=Downloads&query=downloads&url=https%3A%2F%2Fopenplanet.dev%2Fapi%2Fplugin%2F207)](https://openplanet.dev/plugin/speedometer)
@@ -14,26 +14,87 @@
 
 </div>
 
-This plugin brings a speedometer dashboard with the RPM gauge, a gear indicator and the speed.
+**The ultimate real-time telemetry overlay for Trackmania!**
 
-Different themes are included, and you can create your own! ([see here](src/Themes/README.md))
+Transform your racing analysis with comprehensive telemetry data visualization. This plugin provides professional-grade telemetry graphs that track your vehicle's performance metrics over time, perfect for competitive drivers, content creators, and anyone serious about improving their racing lines.
 
-This plugin was created for the [Project Horizon](https://trackmania.exchange/s/tr/65123) - a map by MCYCShadow, that brings the Horizon speedometer!
+## 🚀 **Key Features**
 
-## Themes:
+### **📊 Multi-Layered Telemetry Graphs**
+- **🏎️ Speed Analysis**: Real-time speed tracking with intelligent auto-scaling
+- **⚙️ Gear Visualization**: Stepped gear change indicators showing transmission behavior
+- **🔄 RPM Monitoring**: Engine RPM tracking with configurable height scaling
+- **🌪️ Drift Analysis**: Side speed (drift) measurement for cornering analysis
+- **📈 Time-based Display**: Configurable time window (5-60 seconds) for detailed analysis
 
-### Basic
+### **🎯 Live Data Display**
+- **Current Values**: Real-time speed, gear, RPM, and drift readings
+- **Visual Indicators**: Color-coded gear shift warnings and RPM bar
+- **Smart Scaling**: Automatic graph scaling that adapts to your driving style
+- **Grid System**: Optional grid lines for precise value reading
 
-![Basic theme](images/Basic.jpg)
+### **🎨 Full Customization**
+- **Visual Themes**: Customize colors, line widths, and transparency
+- **Layout Control**: Adjustable graph heights and positioning
+- **Display Options**: Toggle individual telemetry layers on/off
+- **Performance Tuning**: Configurable update intervals and data retention
 
-### BasicDigital
+### **🔧 Professional Features**
+- **Resizable Overlay**: Drag and resize to fit your screen setup
+- **Locator Mode**: Easy positioning and sizing tool
+- **Ice Mode**: Velocity-based calculations for slippery surfaces
+- **Export-Ready**: Clean design perfect for streaming and content creation
 
-![BasicDigital theme](images/BasicDigital.jpg)
+## 🎮 **Perfect For**
 
-### TrackmaniaTurbo
+- **🏆 Competitive Racing**: Analyze your performance to find speed improvements
+- **📺 Content Creation**: Professional telemetry overlay for streams and videos  
+- **🎓 Learning**: Understand how gear changes and speed affect your lap times
+- **🔬 Technical Analysis**: Deep dive into vehicle behavior and driving patterns
+- **🎯 Consistency Training**: Track your driving patterns for more consistent laps
 
-![TrackmaniaTurbo theme](images/TrackmaniaTurbo.jpg)
+## ⚙️ **Advanced Settings**
 
-### Ascension2023
+### **📊 Data Configuration**
+- **Time Window**: 5-60 seconds of historical data
+- **Update Frequency**: 0.01-0.2 second intervals
+- **Graph Scaling**: Auto-scaling with customizable speed ranges
+- **Data Filtering**: Individual graph layer toggles
 
-![Ascension2023 theme](images/Ascension2023.jpg)
+### **🎨 Visual Customization**
+- **Color Schemes**: Full RGBA color customization for all elements
+- **Line Styles**: Adjustable line widths and transparency
+- **Layout Options**: Configurable graph heights and padding
+- **Typography**: Scalable fonts with multiple weight options
+
+### **🔧 Performance Options**
+- **Auto-hide**: Hide when not playing or interface is hidden
+- **Velocity Mode**: Switch between speed and velocity calculations
+- **Memory Management**: Automatic cleanup of old data points
+- **Smooth Animations**: Interpolated scaling for smooth visual transitions
+
+## 🚀 **Quick Start**
+
+1. **Install**: Download and install through Openplanet plugin manager
+2. **Position**: Enable "Locator Mode" to drag and resize the overlay
+3. **Customize**: Access settings through the "Telemetry Settings" tab
+4. **Analyze**: Start driving and watch your telemetry data in real-time!
+
+## 💡 **Pro Tips**
+
+- **🎯 Use Grid Lines**: Enable grid for precise speed and time readings
+- **🔄 Adjust Graph Heights**: Set gear and RPM to 25% for more speed focus
+- **🎨 Color Code**: Use different colors for easy identification during analysis
+- **⏱️ Time Window**: Use shorter windows (5-10s) for detailed analysis, longer (30-60s) for consistency tracking
+- **📊 Layer Management**: Hide unused graphs to reduce visual clutter
+
+## 🛠️ **Technical Details**
+
+- **Real-time Processing**: Sub-50ms data collection intervals
+- **Memory Efficient**: Automatic cleanup prevents memory bloat
+- **Smooth Rendering**: 60fps+ rendering with efficient drawing operations
+- **Cross-Platform**: Works on all Trackmania platforms supported by Openplanet
+
+---
+
+**Take your racing to the next level with professional telemetry analysis!**

@@ -1,40 +1,20 @@
 class Dashboard
 {
-    Gauge@ m_gauge;
+    SpeedGraphGauge@ m_gauge;
 
     Dashboard()
     {
-        UpdateGaugeTheme();
+        InitializeGauge();
     }
 
-    void UpdateGaugeTheme()
+    void InitializeGauge()
     {
-        switch(PluginSettings::Theme)
-        {
-            case PluginSettings::Themes::Basic:
-                @m_gauge = BasicGauge();
-                break;
-            case PluginSettings::Themes::BasicDigital:
-                @m_gauge = BasicDigitalGauge();
-                break;
-            case PluginSettings::Themes::TrackmaniaTurbo:
-                @m_gauge = TMTGauge();
-                break;
-            case PluginSettings::Themes::Ascension2023:
-                @m_gauge = Ascension2023Gauge();
-                break;
-            case PluginSettings::Themes::SpeedGraph:
-                @m_gauge = SpeedGraphGauge();
-                break;
-            default:
-                @m_gauge = Gauge();
-                break;
-        }
+        @m_gauge = SpeedGraphGauge();
     }
 
     void Render()
     {
-        if (!PluginSettings::ShowSpeedometer) return;
+        if (!PluginSettings::ShowSpeedGraph) return;
 
         if (PluginSettings::HideWhenNotIFace && !UI::IsGameUIVisible()) return;
 

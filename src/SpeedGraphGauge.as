@@ -6,7 +6,19 @@ class SpeedDataPoint {
     float sideSpeed;  // Add side speed to data points
 }
 
-class SpeedGraphGauge : Gauge {
+class SpeedGraphGauge {
+    // Base gauge properties (from Gauge.as)
+    vec2 m_pos;
+    vec2 m_size;
+    vec2 m_resPos;
+    vec2 m_center;
+    float m_rpm = 0.0f;
+    float m_speed = 0.0f;
+    int m_gear = 0;
+    float m_minRpm = 200.0f; // Minimal RPM to avoid flickering at engine idle
+    float m_maxRpm = 11000.0f;
+    
+    // SpeedGraph specific properties
     array<SpeedDataPoint> m_dataPoints;
     float m_lastUpdateTime = 0.0f;
     
@@ -25,15 +37,14 @@ class SpeedGraphGauge : Gauge {
     float m_sideSpeed = 0.0f;
     
     SpeedGraphGauge() {
-        super();
         // Load fonts - Light Italic for values, Demi Bold for labels
         m_valueFont = nvg::LoadFont("src/Fonts/Oswald-Light-Italic.ttf");
         m_labelFont = nvg::LoadFont("src/Fonts/Oswald-Demi-Bold-Italic.ttf");
     }
     
-    void InternalRender(CSceneVehicleVisState@ vis) override {
+    void InternalRender(CSceneVehicleVisState@ vis) {
         // Get speed and gear data first (same as base class)
-        if (PluginSettings::ShowVelocity) {
+        if (SpeedGraphSettings::ShowVelocity) {
             m_speed = vis.WorldVel.Length() * 3.6f;
         } else {
             m_speed = vis.FrontSpeed * 3.6f;
@@ -66,7 +77,7 @@ class SpeedGraphGauge : Gauge {
         nvg::ResetTransform();
     }
     
-    void Render() override {
+    void Render() {
         // Calculate graph dimensions within the positioned container
         m_graphPos = vec2(SpeedGraphSettings::GraphPadding, SpeedGraphSettings::GraphPadding);
         m_graphSize = vec2(m_size.x - 2 * SpeedGraphSettings::GraphPadding, m_size.y - 2 * SpeedGraphSettings::GraphPadding);
@@ -168,7 +179,7 @@ class SpeedGraphGauge : Gauge {
         }
     }
     
-    void RenderBackground() override {
+    void RenderBackground() {
         nvg::BeginPath();
         nvg::Rect(m_graphPos, m_graphSize);
         nvg::FillColor(SpeedGraphSettings::BackgroundColor);
@@ -342,8 +353,9 @@ class SpeedGraphGauge : Gauge {
             // Clamp X coordinate to graph bounds
             x = Math::Clamp(x, m_graphPos.x, m_graphPos.x + m_graphSize.x);
             
-            // Calculate Y coordinate (RPM scaled to full graph height from bottom)
-            float y = m_graphPos.y + m_graphSize.y * (1.0f - (m_dataPoints[i].rpm / maxRPM));
+            // Calculate Y coordinate (RPM scaled to configured percentage of graph height from bottom)
+            float rpmRatio = m_dataPoints[i].rpm / maxRPM; // Maps RPM to 0.0-1.0
+            float y = m_graphPos.y + m_graphSize.y * (1.0f - rpmRatio * SpeedGraphSettings::RPMGraphHeightPercent);
             y = Math::Clamp(y, m_graphPos.y, m_graphPos.y + m_graphSize.y);
             
             if (firstPoint) {
@@ -638,24 +650,24 @@ class SpeedGraphGauge : Gauge {
         nvg::ClosePath();
     }
     
-    void RenderSpeed() override {
+    void RenderSpeed() {
         // Speed rendering is handled in RenderGraph
     }
     
-    void RenderRPM() override {
+    void RenderRPM() {
         // RPM rendering is handled in RenderGraph (could be added later)
     }
     
-    void RenderGear() override {
+    void RenderGear() {
         // Gear rendering is handled in RenderGraph
     }
     
-    void RenderSettingsTab() override {
+    void RenderSettingsTab() {
         if (UI::Button("Reset all settings to default")) {
             SpeedGraphSettings::ResetAllToDefault();
         }
         
-        UI::BeginTabBar("SpeedGraph Settings", UI::TabBarFlags::FittingPolicyResizeDown);
+        UI::BeginTabBar("Telemetry Settings", UI::TabBarFlags::FittingPolicyResizeDown);
         
         if (UI::BeginTabItem("General")) {
             UI::BeginChild("General Settings");
@@ -701,6 +713,7 @@ class SpeedGraphGauge : Gauge {
             SpeedGraphSettings::GearLineWidth = UI::SliderFloat("Gear Line Width", SpeedGraphSettings::GearLineWidth, 1.0f, 5.0f);
             SpeedGraphSettings::GridLineWidth = UI::SliderFloat("Grid Line Width", SpeedGraphSettings::GridLineWidth, 0.5f, 2.0f);
             SpeedGraphSettings::GearGraphHeightPercent = UI::SliderFloat("Gear Graph Height (%)", SpeedGraphSettings::GearGraphHeightPercent, 0.1f, 0.5f);
+            SpeedGraphSettings::RPMGraphHeightPercent = UI::SliderFloat("RPM Graph Height (%)", SpeedGraphSettings::RPMGraphHeightPercent, 0.1f, 1.0f);
             SpeedGraphSettings::RPMLineWidth = UI::SliderFloat("RPM Line Width", SpeedGraphSettings::RPMLineWidth, 1.0f, 5.0f);
             SpeedGraphSettings::SideSpeedLineWidth = UI::SliderFloat("Side Speed Line Width", SpeedGraphSettings::SideSpeedLineWidth, 1.0f, 5.0f);
             SpeedGraphSettings::SideSpeedGraphHeightPercent = UI::SliderFloat("Side Speed Graph Height (%)", SpeedGraphSettings::SideSpeedGraphHeightPercent, 0.1f, 1.0f);
