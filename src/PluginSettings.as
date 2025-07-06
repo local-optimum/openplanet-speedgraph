@@ -13,10 +13,10 @@ namespace PluginSettings
     bool LocatorMode = false;
 
     [Setting name="Position" category="General"]
-    vec2 Position = vec2(0.98f, 0.02f);
+    vec2 Position = vec2(1.000f, 0.600f);
 
     [Setting name="Size" category="General"]
-    vec2 Size = vec2(400, 250);
+    vec2 Size = vec2(500, 320);
 
     [SettingsTab name="Telemetry Settings"]
     void RenderTelemetrySettingsTab()
@@ -50,8 +50,10 @@ namespace SpeedGraphSettings
     [Setting name="Show RPM Graph" category="Telemetry"]
     bool ShowRPMGraph = true;
 
-    [Setting name="Show Side Speed Graph" category="Telemetry"]
+#if SIG_SCHOOL
+    [Setting name="Show Side Speed Graph (School mode only)" category="Telemetry"]
     bool ShowSideSpeedGraph = true;
+#endif
 
     [Setting name="Use velocity instead of speed (useful for ice)" category="Telemetry"]
     bool ShowVelocity = false;
@@ -72,8 +74,10 @@ namespace SpeedGraphSettings
     [Setting name="RPM Graph Height (% of total)" category="Telemetry" min=0.1 max=1.0]
     float RPMGraphHeightPercent = 0.25f;
 
-    [Setting name="Side Speed Graph Height (% of total)" category="Telemetry" min=0.1 max=1.0]
+#if SIG_SCHOOL
+    [Setting name="Side Speed Graph Height (% of total) (School mode only)" category="Telemetry" min=0.1 max=1.0]
     float SideSpeedGraphHeightPercent = 0.6f;
+#endif
 
     // === Colors ===
     [Setting name="Background Color" category="Telemetry"]
@@ -94,8 +98,10 @@ namespace SpeedGraphSettings
     [Setting name="RPM Line Color" category="Telemetry"]
     vec4 RPMLineColor = vec4(1.0f, 0.6f, 0.2f, 0.4f); // Low opacity orange for RPM
 
-    [Setting name="Side Speed Line Color" category="Telemetry"]
+#if SIG_SCHOOL
+    [Setting name="Side Speed Line Color (School mode only)" category="Telemetry"]
     vec4 SideSpeedLineColor = vec4(1.0f, 0.7f, 0.8f, 0.6f); // Low opacity pink color
+#endif
 
     [Setting name="Gear Shift Indicator Color" category="Telemetry"]
     vec4 GearShiftIndicatorColor = vec4(1.0f, 0.0f, 0.0f, 1.0f); // Red color for gear shift indicator
@@ -113,8 +119,10 @@ namespace SpeedGraphSettings
     [Setting name="RPM Line Width" category="Telemetry" min=1.0 max=5.0]
     float RPMLineWidth = 1.0f;
 
-    [Setting name="Side Speed Line Width" category="Telemetry" min=1.0 max=5.0]
+#if SIG_SCHOOL
+    [Setting name="Side Speed Line Width (School mode only)" category="Telemetry" min=1.0 max=5.0]
     float SideSpeedLineWidth = 1.0f;
+#endif
 
     void ResetAllToDefault()
     {
@@ -125,26 +133,34 @@ namespace SpeedGraphSettings
         ShowSpeedGraph = true;
         ShowGearGraph = true;
         ShowRPMGraph = true;
+#if SIG_SCHOOL
         ShowSideSpeedGraph = true;
+#endif
         ShowVelocity = false;
         GraphPadding = 20.0f;
         MaxSpeed = 300.0f;
         FontSize = 24.0f;
         GearGraphHeightPercent = 0.25f;
         RPMGraphHeightPercent = 0.25f;
+#if SIG_SCHOOL
         SideSpeedGraphHeightPercent = 0.6f;
+#endif
         BackgroundColor = vec4(0.1f, 0.1f, 0.1f, 0.8f);
         GridColor = vec4(0.3f, 0.3f, 0.3f, 0.5f);
         TextColor = vec4(1.0f, 1.0f, 1.0f, 1.0f);
         SpeedLineColor = vec4(0.2f, 0.8f, 0.2f, 1.0f);
         GearLineColor = vec4(0.6f, 0.8f, 1.0f, 1.0f);
         RPMLineColor = vec4(1.0f, 0.6f, 0.2f, 0.4f);
+#if SIG_SCHOOL
         SideSpeedLineColor = vec4(1.0f, 0.7f, 0.8f, 0.6f);
+#endif
         GearShiftIndicatorColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);
         GridLineWidth = 1.0f;
         SpeedLineWidth = 2.0f;
         GearLineWidth = 2.0f;
         RPMLineWidth = 1.0f;
+#if SIG_SCHOOL
         SideSpeedLineWidth = 1.0f;
+#endif
     }
 } 

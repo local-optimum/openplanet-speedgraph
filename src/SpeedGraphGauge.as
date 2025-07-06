@@ -3,7 +3,9 @@ class SpeedDataPoint {
     float speed;
     int gear;
     float rpm;  // Add RPM to data points
+#if SIG_SCHOOL
     float sideSpeed;  // Add side speed to data points
+#endif
 }
 
 class SpeedGraphGauge {
@@ -34,7 +36,9 @@ class SpeedGraphGauge {
     float m_smoothMaxSpeed = 250.0f;
     
     // Current side speed for display
+#if SIG_SCHOOL
     float m_sideSpeed = 0.0f;
+#endif
     
     SpeedGraphGauge() {
         // Load fonts - Light Italic for values, Demi Bold for labels
@@ -55,13 +59,19 @@ class SpeedGraphGauge {
             m_gear = -1;
         
         // Get side speed data
+#if SIG_SCHOOL
         float sideSpeed = VehicleState::GetSideSpeed(vis);
         m_sideSpeed = sideSpeed;  // Store for display
+#endif
         
         // Update data points
         float currentTime = Time::Now / 1000.0f; // Convert to seconds
         if (currentTime - m_lastUpdateTime >= SpeedGraphSettings::UpdateInterval) {
+#if SIG_SCHOOL
             AddDataPoint(currentTime, m_speed, m_gear, sideSpeed);
+#else
+            AddDataPoint(currentTime, m_speed, m_gear);
+#endif
             m_lastUpdateTime = currentTime;
         }
         
@@ -86,6 +96,7 @@ class SpeedGraphGauge {
         RenderGraph();
     }
     
+#if SIG_SCHOOL
     void AddDataPoint(float timestamp, float speed, int gear, float sideSpeed) {
         SpeedDataPoint point;
         point.timestamp = timestamp;
@@ -95,6 +106,16 @@ class SpeedGraphGauge {
         point.sideSpeed = sideSpeed;  // Store side speed with each data point
         m_dataPoints.InsertLast(point);
     }
+#else
+    void AddDataPoint(float timestamp, float speed, int gear) {
+        SpeedDataPoint point;
+        point.timestamp = timestamp;
+        point.speed = speed;
+        point.gear = gear;
+        point.rpm = m_rpm;  // Store RPM with each data point
+        m_dataPoints.InsertLast(point);
+    }
+#endif
     
     void CleanOldDataPoints(float currentTime) {
         float cutoffTime = currentTime - SpeedGraphSettings::TimeWindow;
@@ -169,9 +190,11 @@ class SpeedGraphGauge {
         }
         
         // Render side speed graph
+#if SIG_SCHOOL
         if (SpeedGraphSettings::ShowSideSpeedGraph) {
             RenderSideSpeedGraph(startTime, endTime);
         }
+#endif
         
         // Render current values
         if (SpeedGraphSettings::ShowCurrentValues) {
@@ -431,6 +454,7 @@ class SpeedGraphGauge {
         nvg::ResetScissor();
     }
 
+#if SIG_SCHOOL
     void RenderSideSpeedGraph(float startTime, float endTime) {
         if (m_dataPoints.Length < 2) return;
         
@@ -506,6 +530,7 @@ class SpeedGraphGauge {
         // Reset clipping
         nvg::ResetScissor();
     }
+#endif
     
     void RenderCurrentValues() {
         // Set clipping region to prevent text from drawing outside graph area
@@ -540,6 +565,7 @@ class SpeedGraphGauge {
         nvg::ClosePath();
 
         // Draw Drift label and underline
+#if SIG_SCHOOL
         nvg::Text(xPos, yPosDrift, "DRIFT");
         vec2 driftBounds = nvg::TextBounds("DRIFT");
         nvg::BeginPath();
@@ -549,6 +575,7 @@ class SpeedGraphGauge {
         nvg::LineTo(vec2(xPos + driftBounds.x, yPosDrift + 2));
         nvg::Stroke();
         nvg::ClosePath();
+#endif
 
         // Draw Gear label and underline
         nvg::Text(xPos, yPosGear, "GEAR");
@@ -576,7 +603,9 @@ class SpeedGraphGauge {
         
         // Calculate width of labels to offset values
         vec2 speedLabelBounds = nvg::TextBounds("SPEED");
+#if SIG_SCHOOL
         vec2 driftLabelBounds = nvg::TextBounds("DRIFT");
+#endif
         vec2 gearLabelBounds = nvg::TextBounds("GEAR");
         vec2 rpmLabelBounds = nvg::TextBounds("RPM");
         float labelPadding = 10;  // Add some space between label and value
@@ -590,8 +619,10 @@ class SpeedGraphGauge {
         nvg::Text(xPos + speedLabelBounds.x + labelPadding, yPosSpeed, Text::Format("%.0f", m_speed));
         
         // Draw drift value
+#if SIG_SCHOOL
         nvg::FillColor(SpeedGraphSettings::TextColor);
         nvg::Text(xPos + driftLabelBounds.x + labelPadding, yPosDrift, Text::Format("%.0f", m_sideSpeed));
+#endif
         
         // Draw gear value with color based on RPM
         string gearText = m_gear == -1 ? "R" : Text::Format("%d", m_gear);
@@ -685,7 +716,9 @@ class SpeedGraphGauge {
             SpeedGraphSettings::ShowSpeedGraph = UI::Checkbox("Show Speed Graph", SpeedGraphSettings::ShowSpeedGraph);
             SpeedGraphSettings::ShowGearGraph = UI::Checkbox("Show Gear Graph", SpeedGraphSettings::ShowGearGraph);
             SpeedGraphSettings::ShowRPMGraph = UI::Checkbox("Show RPM Graph", SpeedGraphSettings::ShowRPMGraph);
-            SpeedGraphSettings::ShowSideSpeedGraph = UI::Checkbox("Show Side Speed Graph", SpeedGraphSettings::ShowSideSpeedGraph);
+#if SIG_SCHOOL
+            SpeedGraphSettings::ShowSideSpeedGraph = UI::Checkbox("Show Side Speed Graph (School mode only)", SpeedGraphSettings::ShowSideSpeedGraph);
+#endif
             
             UI::EndChild();
             UI::EndTabItem();
@@ -700,7 +733,9 @@ class SpeedGraphGauge {
             SpeedGraphSettings::BackgroundColor = UI::InputColor4("Background Color", SpeedGraphSettings::BackgroundColor);
             SpeedGraphSettings::TextColor = UI::InputColor4("Text Color", SpeedGraphSettings::TextColor);
             SpeedGraphSettings::RPMLineColor = UI::InputColor4("RPM Line Color", SpeedGraphSettings::RPMLineColor);
-            SpeedGraphSettings::SideSpeedLineColor = UI::InputColor4("Side Speed Line Color", SpeedGraphSettings::SideSpeedLineColor);
+#if SIG_SCHOOL
+            SpeedGraphSettings::SideSpeedLineColor = UI::InputColor4("Side Speed Line Color (School mode only)", SpeedGraphSettings::SideSpeedLineColor);
+#endif
             
             UI::EndChild();
             UI::EndTabItem();
@@ -715,8 +750,10 @@ class SpeedGraphGauge {
             SpeedGraphSettings::GearGraphHeightPercent = UI::SliderFloat("Gear Graph Height (%)", SpeedGraphSettings::GearGraphHeightPercent, 0.1f, 0.5f);
             SpeedGraphSettings::RPMGraphHeightPercent = UI::SliderFloat("RPM Graph Height (%)", SpeedGraphSettings::RPMGraphHeightPercent, 0.1f, 1.0f);
             SpeedGraphSettings::RPMLineWidth = UI::SliderFloat("RPM Line Width", SpeedGraphSettings::RPMLineWidth, 1.0f, 5.0f);
-            SpeedGraphSettings::SideSpeedLineWidth = UI::SliderFloat("Side Speed Line Width", SpeedGraphSettings::SideSpeedLineWidth, 1.0f, 5.0f);
-            SpeedGraphSettings::SideSpeedGraphHeightPercent = UI::SliderFloat("Side Speed Graph Height (%)", SpeedGraphSettings::SideSpeedGraphHeightPercent, 0.1f, 1.0f);
+#if SIG_SCHOOL
+            SpeedGraphSettings::SideSpeedLineWidth = UI::SliderFloat("Side Speed Line Width (School mode only)", SpeedGraphSettings::SideSpeedLineWidth, 1.0f, 5.0f);
+            SpeedGraphSettings::SideSpeedGraphHeightPercent = UI::SliderFloat("Side Speed Graph Height (%) (School mode only)", SpeedGraphSettings::SideSpeedGraphHeightPercent, 0.1f, 1.0f);
+#endif
             
             UI::EndChild();
             UI::EndTabItem();
