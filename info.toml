@@ -2,9 +2,8 @@
 name = "Telemetry"
 author = "Local Optimum"
 category = "Overlay"
-siteid = 207
 
-version = "1.0.0"
+version = "1.0.1"
 
 [script]
 dependencies = [ "VehicleState" ]

@@ -543,63 +543,18 @@ class SpeedGraphGauge {
         float labelFontSize = SpeedGraphSettings::FontSize * 0.8f;  // Slightly smaller for labels
         float valueFontSize = SpeedGraphSettings::FontSize * 1.2f;  // Larger for values
         float xPos = m_graphPos.x + 10;
-        float yPosSpeed = m_graphPos.y + 30;
-        float yPosDrift = m_graphPos.y + 60;  // Drift between Speed and Gear
-        float yPosGear = m_graphPos.y + 90;   // Moved down to accommodate drift
-        float yPosRPM = m_graphPos.y + 120;   // Moved down to accommodate drift
+        
+        // Calculate vertical spacing between labels
+        float baseYPos = m_graphPos.y + 30;
+        float verticalSpacing = 30.0f;  // Default spacing between labels
         
         // Draw labels with bold font
         nvg::FontFace(m_labelFont);
         nvg::FontSize(labelFontSize);
         nvg::FillColor(SpeedGraphSettings::TextColor);
 
-        // Draw Speed label and underline
-        nvg::Text(xPos, yPosSpeed, "SPEED");
-        vec2 speedBounds = nvg::TextBounds("SPEED");
-        nvg::BeginPath();
-        nvg::StrokeWidth(2.0f);
-        nvg::StrokeColor(SpeedGraphSettings::SpeedLineColor);
-        nvg::MoveTo(vec2(xPos, yPosSpeed + 2));
-        nvg::LineTo(vec2(xPos + speedBounds.x, yPosSpeed + 2));
-        nvg::Stroke();
-        nvg::ClosePath();
-
-        // Draw Drift label and underline
-#if SIG_SCHOOL
-        nvg::Text(xPos, yPosDrift, "DRIFT");
-        vec2 driftBounds = nvg::TextBounds("DRIFT");
-        nvg::BeginPath();
-        nvg::StrokeWidth(2.0f);
-        nvg::StrokeColor(SpeedGraphSettings::SideSpeedLineColor);
-        nvg::MoveTo(vec2(xPos, yPosDrift + 2));
-        nvg::LineTo(vec2(xPos + driftBounds.x, yPosDrift + 2));
-        nvg::Stroke();
-        nvg::ClosePath();
-#endif
-
-        // Draw Gear label and underline
-        nvg::Text(xPos, yPosGear, "GEAR");
-        vec2 gearBounds = nvg::TextBounds("GEAR");
-        nvg::BeginPath();
-        nvg::StrokeWidth(2.0f);
-        nvg::StrokeColor(SpeedGraphSettings::GearLineColor);
-        nvg::MoveTo(vec2(xPos, yPosGear + 2));
-        nvg::LineTo(vec2(xPos + gearBounds.x, yPosGear + 2));
-        nvg::Stroke();
-        nvg::ClosePath();
-
-        // Draw RPM label and underline if enabled
-        if (SpeedGraphSettings::ShowRPMGraph) {
-            nvg::Text(xPos, yPosRPM, "RPM");
-            vec2 rpmBounds = nvg::TextBounds("RPM");
-            nvg::BeginPath();
-            nvg::StrokeWidth(2.0f);
-            nvg::StrokeColor(SpeedGraphSettings::RPMLineColor);
-            nvg::MoveTo(vec2(xPos, yPosRPM + 2));
-            nvg::LineTo(vec2(xPos + rpmBounds.x, yPosRPM + 2));
-            nvg::Stroke();
-            nvg::ClosePath();
-        }
+        // Track current Y position as we add elements
+        float currentYPos = baseYPos;
         
         // Calculate width of labels to offset values
         vec2 speedLabelBounds = nvg::TextBounds("SPEED");
@@ -614,24 +569,102 @@ class SpeedGraphGauge {
         nvg::FontFace(m_valueFont);
         nvg::FontSize(valueFontSize);
         
+        // Always draw Speed (it's the primary metric)
+        // Draw Speed label and underline
+        nvg::FontFace(m_labelFont);
+        nvg::FontSize(labelFontSize);
+        nvg::FillColor(SpeedGraphSettings::TextColor);
+        nvg::Text(xPos, currentYPos, "SPEED");
+        vec2 speedBounds = nvg::TextBounds("SPEED");
+        nvg::BeginPath();
+        nvg::StrokeWidth(2.0f);
+        nvg::StrokeColor(SpeedGraphSettings::SpeedLineColor);
+        nvg::MoveTo(vec2(xPos, currentYPos + 2));
+        nvg::LineTo(vec2(xPos + speedBounds.x, currentYPos + 2));
+        nvg::Stroke();
+        nvg::ClosePath();
+        
         // Draw speed value
+        nvg::FontFace(m_valueFont);
+        nvg::FontSize(valueFontSize);
         nvg::FillColor(SpeedGraphSettings::TextColor);
-        nvg::Text(xPos + speedLabelBounds.x + labelPadding, yPosSpeed, Text::Format("%.0f", m_speed));
+        nvg::Text(xPos + speedLabelBounds.x + labelPadding, currentYPos, Text::Format("%.0f", m_speed));
         
-        // Draw drift value
+        // Move to next position
+        currentYPos += verticalSpacing;
+
+        // Draw Drift label and value if in school mode
 #if SIG_SCHOOL
-        nvg::FillColor(SpeedGraphSettings::TextColor);
-        nvg::Text(xPos + driftLabelBounds.x + labelPadding, yPosDrift, Text::Format("%.0f", m_sideSpeed));
+        if (SpeedGraphSettings::ShowSideSpeedGraph) {
+            nvg::FontFace(m_labelFont);
+            nvg::FontSize(labelFontSize);
+            nvg::FillColor(SpeedGraphSettings::TextColor);
+            nvg::Text(xPos, currentYPos, "DRIFT");
+            vec2 driftBounds = nvg::TextBounds("DRIFT");
+            nvg::BeginPath();
+            nvg::StrokeWidth(2.0f);
+            nvg::StrokeColor(SpeedGraphSettings::SideSpeedLineColor);
+            nvg::MoveTo(vec2(xPos, currentYPos + 2));
+            nvg::LineTo(vec2(xPos + driftBounds.x, currentYPos + 2));
+            nvg::Stroke();
+            nvg::ClosePath();
+            
+            // Draw drift value
+            nvg::FontFace(m_valueFont);
+            nvg::FontSize(valueFontSize);
+            nvg::FillColor(SpeedGraphSettings::TextColor);
+            nvg::Text(xPos + driftLabelBounds.x + labelPadding, currentYPos, Text::Format("%.0f", m_sideSpeed));
+            
+            // Move to next position
+            currentYPos += verticalSpacing;
+        }
 #endif
-        
-        // Draw gear value with color based on RPM
-        string gearText = m_gear == -1 ? "R" : Text::Format("%d", m_gear);
-        nvg::FillColor(m_rpm >= 10000 ? SpeedGraphSettings::GearShiftIndicatorColor : SpeedGraphSettings::TextColor);
-        nvg::Text(xPos + gearLabelBounds.x + labelPadding, yPosGear + 3, gearText); // Move gear number down by 3px
-        
-        // Draw RPM bar if RPM graph is enabled
+
+        // Draw Gear label and value if gear graph is enabled
+        if (SpeedGraphSettings::ShowGearGraph) {
+            nvg::FontFace(m_labelFont);
+            nvg::FontSize(labelFontSize);
+            nvg::FillColor(SpeedGraphSettings::TextColor);
+            nvg::Text(xPos, currentYPos, "GEAR");
+            vec2 gearBounds = nvg::TextBounds("GEAR");
+            nvg::BeginPath();
+            nvg::StrokeWidth(2.0f);
+            nvg::StrokeColor(SpeedGraphSettings::GearLineColor);
+            nvg::MoveTo(vec2(xPos, currentYPos + 2));
+            nvg::LineTo(vec2(xPos + gearBounds.x, currentYPos + 2));
+            nvg::Stroke();
+            nvg::ClosePath();
+            
+            // Draw gear value with color based on RPM
+            nvg::FontFace(m_valueFont);
+            nvg::FontSize(valueFontSize);
+            string gearText = m_gear == -1 ? "R" : Text::Format("%d", m_gear);
+            nvg::FillColor(m_rpm >= 10000 ? SpeedGraphSettings::GearShiftIndicatorColor : SpeedGraphSettings::TextColor);
+            nvg::Text(xPos + gearLabelBounds.x + labelPadding, currentYPos + 3, gearText); // Move gear number down by 3px
+            
+            // Move to next position
+            currentYPos += verticalSpacing;
+        }
+
+        // Draw RPM label and bar if RPM graph is enabled
         if (SpeedGraphSettings::ShowRPMGraph) {
-            RenderRPMBar(xPos + rpmLabelBounds.x + labelPadding, yPosRPM);
+            nvg::FontFace(m_labelFont);
+            nvg::FontSize(labelFontSize);
+            nvg::FillColor(SpeedGraphSettings::TextColor);
+            nvg::Text(xPos, currentYPos, "RPM");
+            vec2 rpmBounds = nvg::TextBounds("RPM");
+            nvg::BeginPath();
+            nvg::StrokeWidth(2.0f);
+            nvg::StrokeColor(SpeedGraphSettings::RPMLineColor);
+            nvg::MoveTo(vec2(xPos, currentYPos + 2));
+            nvg::LineTo(vec2(xPos + rpmBounds.x, currentYPos + 2));
+            nvg::Stroke();
+            nvg::ClosePath();
+            
+            // Draw RPM bar
+            nvg::FontFace(m_valueFont);
+            nvg::FontSize(valueFontSize);
+            RenderRPMBar(xPos + rpmLabelBounds.x + labelPadding, currentYPos);
         }
         
         nvg::ClosePath();
